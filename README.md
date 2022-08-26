@@ -1,5 +1,6 @@
 # RdeGlmLassoGam
-R-package accompanying the paper "Robust Inference and Modeling of Mean and Dispersion for Generalized Linear Models"
+R-package accompanying the paper "Robust Inference and Modeling of Mean and Dispersion for Generalized Linear Models".
+
 This package provides a robust estimator for the parameters in the double exponential family, the so-called Robust Double Exponential (RDE) Estimator. 
 One can use (a combination of) Generalised Linear Models, Generalised Penalized Linear Models or Generalised Additive Models.
 
