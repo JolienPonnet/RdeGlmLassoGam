@@ -5,16 +5,16 @@ This package provides a robust estimator for the parameters in the double expone
 One can use (a combination of) Generalised Linear Models, Generalised Penalized Linear Models or Generalised Additive Models.
 
 Required libraries:
-  "CompQuadForm
-  "Matrix"
-  "robustbase"
-  "MASS"
-  "stats"
-  "utils"
-  "cellWise"
-  "lassoshooting"
-  "glmnet"
-  "tidyr"
+  "CompQuadForm",
+  "Matrix",
+  "robustbase",
+  "MASS",
+  "stats",
+  "utils",
+  "cellWise",
+  "lassoshooting",
+  "glmnet" and
+  "tidyr".
   
 The package consists several files that can briefly be explained as follows: 
   - DBinom_Functions.R contains the density, distribution function, quantile function and random generation for the double binomial distribution with parameters n, mu and theta.
