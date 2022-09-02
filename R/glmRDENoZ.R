@@ -1,3 +1,13 @@
+##'This function estimates the RDE coefficients in case there is no dispersion part.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param beta.ini optional initial value for the beta coefficients.
+##' @param weights.on.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. The tuning parameter alpha can be provided in the optionList.
+##' @param contX indices of the columns in X representing the the continuous variables.  When weights.on.xz1 is equal to "covMcd", this parameter should be specified. Default value is NULL.
+##' @param weightFunction1 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.7 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. Default value is list(huberC = 2, tukeyC = 3, tol = 1e-4, maxIt = 100, alpha = 0.75).
 glmRDENoZ <- function(y, X, m = NULL,
                                family,
                                beta.ini,
@@ -198,6 +208,15 @@ glmRDENoZ <- function(y, X, m = NULL,
 }
 
 # This function calculates asymptotic information: M matrix, Q matrix and asymptotic variance matrix.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param delta the beta parameter estimates.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param cutOff1 tuning parameter of the mean model.
+##' @param weightF1 the weight function that is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean.
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.7 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here.
 CalculateAsymptoticInfoNoZ2 <- function(y, X, m, delta,
                                     family,
                                     cutOff1, weightF1,
@@ -331,6 +350,15 @@ CalculateAsymptoticInfoNoZ2 <- function(y, X, m, delta,
 }
 
 # This function is used to update the beta parameter.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials.
+##' @param alpha a vector with estimated beta values
+##' @param cutOff tuning constant used in the mean model
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
 CalculateBetaUpdateNOZ2 <- function(y, X,
                                     family,
                                     m,
