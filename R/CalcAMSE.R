@@ -1,3 +1,16 @@
+##' This function calculates the Asymptotic Mean Squared Error (AMSE) of the Robust Double Exponential (RDE) estimator.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param weights.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean.
+##' @param weights.xz2 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion.
+##' @param alpha a numeric vector containing the beta and gamma estimates.
+##' @param cutOff1 the tuning parameter that is used in the function to diminish the effect of large residuals in the model for the mean.
+##' @param weightF1 the function that is used to diminish the effect of large residuals in the model for the mean.
+##' @param cutOff2 the tuning parameter that is used in the function to diminish the effect of large residuals in the model for the dispersion.
+##' @param weightF2 the function that is used to diminish the effect of large residuals in the model for the dispersion.
 CalcAMSE <- function(y, X, Z,
                            family,
                            m = NULL,
