@@ -1,3 +1,7 @@
+##' Normalization constant for the double binomial distribution with parameters mu and theta.
+##' @param n number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 normConstant_Binom <- function(n, mu, theta){
 
   tol <- 1e-15
@@ -32,6 +36,12 @@ normConstant_Binom <- function(n, mu, theta){
 
 }
 
+##' Density for the double binomial distribution with parameters mu and theta.
+##' @param x vector of (non-negative integer) quantiles.
+##' @param n number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param correction	boolean indicating whether the normalizing constant should be used or not. Default value is TRUE.
 dDBinom <- function(x, n, mu, theta, correction = TRUE){
   # print(x)
   if (!is.numeric(x)) stop("x must be a numeric vector.")
@@ -93,6 +103,11 @@ dDBinom <- function(x, n, mu, theta, correction = TRUE){
 
 }
 
+##' Distribution function for the double binomial distribution with parameters mu and theta.
+##' @param q vector of quantiles.
+##' @param n number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 pDBinom <- function(q, n, mu, theta){
 
   if (!is.numeric(q)) stop("q must be a numeric vector.")
@@ -126,6 +141,11 @@ pDBinom <- function(q, n, mu, theta){
 
 }
 
+##' Quantile function for the double binomial distribution with parameters mu and theta.
+##' @param p vector of probabilities.
+##' @param n number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 qDBinom <- function(p, n, mu, theta){
 
   if (!is.numeric(p)) stop("p must be a numeric vector.")
@@ -150,6 +170,11 @@ qDBinom <- function(p, n, mu, theta){
   return(Quant)
 }
 
+##' Random generation for the double binomial distribution with parameters mu and theta.
+##' @param m number of random values to return.
+##' @param n number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 rDBinom <- function(m, n, mu, theta){
   if (mu < 0) stop("mu must be greater than 0.")
   if (theta <= 0) stop("theta must be greater than 0.")
