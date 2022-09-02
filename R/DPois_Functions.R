@@ -1,3 +1,6 @@
+##' Normalization constant for the double Poisson distribution with parameters mu and theta.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 normConstant <- function(mu, theta){
 
   tol <- 1e-15
@@ -28,6 +31,11 @@ normConstant <- function(mu, theta){
 
 }
 
+##' Density for the double Poisson distribution with parameters mu and theta.
+##' @param x vector of (non-negative integer) quantiles.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param correction	boolean indicating whether the normalizing constant should be used or not. Default value is TRUE.
 dDPois <- function(x, mu, theta, correction = TRUE){
 
   if(!is.numeric(x)) stop("x must be a numeric vector.")
@@ -78,6 +86,10 @@ dDPois <- function(x, mu, theta, correction = TRUE){
 
 }
 
+##' Distribution function for the double Poisson distribution with parameters mu and theta.
+##' @param q vector of quantiles.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 pDPois <- function(q, mu, theta){
 
   if(!is.numeric(q)) stop("q must be a numeric vector.")
@@ -108,6 +120,10 @@ pDPois <- function(q, mu, theta){
 
 }
 
+##' Quantile function for the double Poisson distribution with parameters mu and theta.
+##' @param p vector of probabilities.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 qDPois <- function(p, mu, theta){
 
   if(!is.numeric(p)) stop("p must be a numeric vector.")
@@ -140,6 +156,11 @@ qDPois <- function(p, mu, theta){
 
   return(Quant)
 }
+
+##' Random generation for the double Poisson distribution with parameters mu and theta.
+##' @param n number of random values to return.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
 
 rDPois <- function(n, mu, theta){
   if (mu <= 0) stop("mu must be greater than 0.")
