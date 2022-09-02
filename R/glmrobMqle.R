@@ -6,7 +6,7 @@
 ## including those globalVariables() {also in other places!}:
 globalVariables(c("residP", "residPS", "dmu.deta", "snu"), add=TRUE)
 
-##' @title
+##' @title robXweights
 ##' @param wts a character string \dQuote{weights.on.x} specifying how weights should be computed
 ##'            *or* a numeric vector of final weights in which case nothing is computed.
 ##' @param X  n x p  design matrix aka model.matrix()
@@ -50,9 +50,51 @@ robXweights <- function(wts, X, intercept=TRUE) {
     rep.int(1,nobs)
 }
 
+#### glmrobMqle is a function of the package robustbase, that is copied due to a 
+#### small change in their code such that it also accepts a vector value 
+#### for the parameter weights.on.x
 
-##' @param intercept logical, if true, X[,] has an intercept column which should
-##'                  not be used for rob.wts
+#### Description 
+#### glmrobMqle is used by the function glmrob, to obtain a robust Mallow's quasi-
+#### likelihood estimator. 
+
+##' Arguments 
+##' @param X: model matrix 
+##' @param y: response vector
+##' @param weights: an optional vector of weights to be used in the fitting process.
+##' @param start:    starting values for the parameters in the linear predictor. Note 
+##'           that specifying start has somewhat different meaning for the 
+##'           different methods. Notably, for "MT", this skips the expensive 
+##'           computation of initial estimates via sub samples, but needs to be 
+##'           robust itself.
+##' @param offset: this can be used to specify an a priori known component to be included
+##'         in the linear predictor during fitting.
+##' @param family: a description of the error distribution and link function to be used 
+##'         in the model. This can be a character string naming a family function, 
+##'         a family function or the result of a call to a family function. 
+##' @param weights.on.x: a character string (can be abbreviated), a function or list 
+##'               (see below), or a numeric vector of length n, specifying how 
+##'               points (potential outliers) in x-space are downweighted. If 
+##'               "hat", weights on the design of the form sqrt{1-h_{ii}} are used, 
+##'               where h_{ii} are the diagonal elements of the hat matrix. 
+##'               If "robCov", weights based on the robust Mahalanobis distance of 
+##'               the design matrix (intercept excluded) are used where the 
+##'               covariance matrix and the centre is estimated by cov.rob from 
+##'               the package MASS. Similarly, if "covMcd", robust weights are 
+##'               computed using covMcd. The default is "none".
+##'               If weights.on.x is a function, it is called with arguments 
+##'               (X, intercept) and must return an n-vector of non-negative 
+##'               weights.
+##'               If it is a list, it must be of length one, and as element 
+##'               contain a function much like covMcd() or cov.rob() 
+##'               (package MASS), which computes multivariate location and 
+##'               "scatter" of a data matrix X.
+##' @param control: a list of parameters for controlling the fitting process. 
+##'          See the documentation for glmrobMqle.control for details.
+##' @param intercept: logical indicating whether an intercept should be fitted
+##' @param trace: logical (or integer) indicating if intermediate results should be 
+##'        printed; defaults to 0 (the same as FALSE).
+##'
 glmrobMqle <-
   function(X, y, weights = NULL, start = NULL, offset = NULL,
            family, weights.on.x = "none",
@@ -305,8 +347,9 @@ glmrobMqle <-
          converged = conv)
   }
 
-
-## NB: X  is model.matrix() aka design matrix used; typically including an intercept
+#### wts_HiiDist is a function to determine the leverage weights based on the hat matrix
+#### It is a function of the package robustbase
+##' @param X is model.matrix() aka design matrix used; typically including an intercept
 wts_HiiDist <- function(X) {
   ## Hii := diag( tcrossprod( qr.Q(qr(X)) ) ) == rowSums( qr.Q(qr(X)) ^2 ) :
   x <- qr(X)
@@ -343,7 +386,12 @@ wts_RobDist <- function(X, intercept, covFun)
 }
 
 
-## MM: 'acc' seems a misnomer to me, but it's inherited from  MASS::rlm
+#### glmrobMqle.control are auxiliary functions as user interface for glmrob fitting when the different methods, "Mqle", "BY", or "MT" are used. Typically only used when calling glmrob.
+#### It is a function of the package robustbase
+##' @param acc Positive convergence tolerance with default value 1e-04
+##' @param test.acc Default value is "coef", only one that is currentl implemented
+##' @param maxit Maximum number of iterations, with default value 50
+##' @param tcc Tuning constant c for Huber's psi-function. Default value is 1.345 
 glmrobMqle.control <-
   function(acc = 1e-04, test.acc = "coef", maxit = 50, tcc = 1.345)
   {
@@ -377,7 +425,8 @@ glmrobMqle.control <-
 
 
 ### --- Poisson -- family ---
-
+## Initialization before calculating eg. E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Poisson distribution.
 EpsiPois.init <- expression(
   {
     dpH <- dpois(H, mu); dpH1 <- dpois(H-1, mu)
@@ -387,27 +436,32 @@ EpsiPois.init <- expression(
     E2f <- mu*(dpH1 - dpH - dpK1 + dpK) + pKm1 - pHm1
   })
 
+## Calculation of E(psi) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Poisson distribution.
 EpsiPois <- expression(
   {
     tcc*(1 - pK - pH) + mu*(dpH - dpK)/sV
   })
 
+## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Poisson distribution.
 Epsi2Pois <- expression(
   {
-    ## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
     tcc^2 * (pH + 1 - pK) + E2f
   })
 
+## Calculation of E(psi*s) for the diagonal elements of B in the
+## expression matrix M = 1/n t(X) %*% B %*% X:
+## Expression from the package robustbase, focusing on the Poisson distribution.
 EpsiSPois <- expression(
   {
-    ## Calculation of E(psi*s) for the diagonal elements of B in the
-    ## expression matrix M = 1/n t(X) %*% B %*% X:
     tcc*(dpH + dpK) + E2f / sV
   })
 
 
 ### --- Binomial -- family ---
-
+## Initialization before calculating eg. E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the binomial distribution.
 EpsiBin.init <- expression({
   pK <- pbinom(K, ni, mu)
   pH <- pbinom(H, ni, mu)
@@ -425,6 +479,8 @@ EpsiBin.init <- expression({
                    (ni - 1) * mu * ifelse(ni == 2, (H <= 1)*(K >= 2), pKm2 - pHm2))
 })
 
+## Calculation of E(psi) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the binomial distribution.
 EpsiBin <- expression(
   {
     tcc*(1 - pK - pH) +
@@ -432,36 +488,46 @@ EpsiBin <- expression(
              (pKm1 - pHm1 - pK + pH) * mu * sni/sV)
   })
 
+## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the binomial distribution.
 Epsi2Bin <- expression(
   {
-    ## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
     tcc^2*(pH + 1 - pK) + QlV
   })
 
+## Calculation of E(psi*s) for the diagonal elements of B in the
+## expression matrix M = (X' B X)/n
+## Expression from the package robustbase, focusing on the binomial distribution.
 EpsiSBin <- expression(
   {
-    ## Calculation of E(psi*s) for the diagonal elements of B in the
-    ## expression matrix M = (X' B X)/n
     mu/Vmu*(tcc*(pH - ifelse(ni == 1, H >= 1, pHm1)) +
               tcc*(pK - ifelse(ni == 1, K > 0,  pKm1))) + ifelse(ni == 0, 0, QlV / (sni*sV))
   })
 
 ### --- Gaussian -- family ---
-
+## Initialization before calculating eg. E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gaussian distribution.
 EpsiGaussian.init <- expression({
   dc <- dnorm(tcc)
   pc <- pnorm(tcc)
 })
-
+## Calculation of E(psi) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gaussian distribution.
 EpsiGaussian <- expression( 0 )
 
+## Calculation of E(psi*s) for the diagonal elements of B in the
+## expression matrix M = (X' B X)/n
+## Expression from the package robustbase, focusing on the Gaussian distribution.
 EpsiSGaussian <- expression( 2*pc-1 )
 
+## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gaussian distribution.
 Epsi2Gaussian <- expression( 2*tcc^2*(1-pc)-2*tcc*dc+2*pc-1 )
 
+## Classical estimation of the dispersion paramter phi = sigma^2
+## Expression from the package robustbase, focusing on the Gaussian distribution.
 phiGaussianEst.cl <- expression(
   {
-    ## Classical estimation of the dispersion paramter phi = sigma^2
     sum(((y - mu)/mu)^2)/(nobs - ncoef)
   })
 
@@ -471,9 +537,9 @@ phiGaussianEst <- expression(
   })
 
 ### --- Gamma -- family ---
-
+## Gm corrresponds to G * nu^((nu-1)/2) / Gamma(nu)
+## Expression from the package robustbase.
 Gmn <- function(t, nu) {
-  ## Gm corrresponds to G * nu^((nu-1)/2) / Gamma(nu)
   snu <- sqrt(nu)
   snut <- snu+t
   r <- numeric(length(snut))
@@ -485,6 +551,8 @@ Gmn <- function(t, nu) {
   r
 }
 
+## Initialization before calculating eg. E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gamma distribution.
 EpsiGamma.init <- expression({
 
   nu <- 1/phi      ## form parameter nu
@@ -499,30 +567,39 @@ EpsiGamma.init <- expression({
   GUtcc <- Gmn( tcc,nu)
 })
 
+## Calculation of E(psi) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gamma distribution.
 EpsiGamma <- expression( tcc*(1-pPtc-pMtc) + GLtcc - GUtcc )
 
+## Calculation of E(psi*s) for the diagonal elements of B in the
+## expression matrix M = (X' B X)/n
+## Expression from the package robustbase, focusing on the Gamma distribution.
 EpsiSGamma <- expression( ((GLtcc - GUtcc) + snu*(pPtc-pMtc))/mu )
 
+## Calculation of E(psi^2) for the diagonal elements of A in matrix Q:
+## Expression from the package robustbase, focusing on the Gamma distribution.
 Epsi2Gamma <- expression({
   (tcc^2*(pMtc+1-pPtc) + (pPtc-pMtc) +
      (GLtcc*(1-aux2) - GUtcc*(1+aux2))/snu )
 })
 
-
+## Classical moment estimation of the dispersion parameter phi
+## Expression from the package robustbase, focusing on the Gamma distribution.
 phiGammaEst.cl <- expression(
   {
-    ## Classical moment estimation of the dispersion parameter phi
     sum(((y - mu)/mu)^2)/(nobs-ncoef)
   })
 
+## robust estimation of the dispersion parameter by
+## Huber's proposal 2
 phiGammaEst <- expression(
   {
-    ## robust estimation of the dispersion parameter by
-    ## Huber's proposal 2
     sphi <- uniroot(Huberprop2, interval=Rphi,
                     ns.resid=residP, mu=mu, Vmu=Vmu, tcc=tcc)$root
   })
 
+## Function from the package robustbase, used to obtain a robust estimation of
+## the dispersion parameter by Huber's proposal 2
 Huberprop2 <- function(phi, ns.resid, mu, Vmu, tcc)
 {
   eval(EpsiGamma.init)
@@ -555,16 +632,16 @@ if(FALSE) ## no-eval version
 pasteK <- function(...) paste(..., collapse = ", ")
 
 ####  functions hidden in namespace ####
-
+## Purpose: nicely and sensibly print a 'control' structure
+##		currently  for lmrob(), glmrob()
+## Author: Martin Maechler, Date: 31 May 2006
+## Function from the package robustbase.
 printControl <-
   function(ctrl, digits = getOption("digits"),
            str.names = "seed", drop. = character(0),
            header = "Algorithmic parameters:",
            ...)
   {
-    ## Purpose: nicely and sensibly print a 'control' structure
-    ##		currently  for lmrob(), glmrob()
-    ## Author: Martin Maechler, Date: 31 May 2006
     PR <- function(LST, ...) if(length(LST)) print(unlist(LST), ...)
 
     cat(header,"\n")
@@ -586,12 +663,17 @@ printControl <-
       }
   }
 
-
+## Purpose: nicely print a "summary" of robustness weights
+## Function from the package robustbase
+##' @param w vector with weights
+##' @param digits Number of digits with default value getOption("digits")
+##' @param header Header, with default value "Robustness weights:"
+##' @param eps tolerance value, weights are considered to be zero when smaller than eps
+##' @param eps1 tolerance value, weights are considered to be one when larger than eps1
 summarizeRobWeights <-
   function(w, digits = getOption("digits"), header = "Robustness weights:",
            eps = 0.1 / length(w), eps1 = 1e-3, ...)
   {
-    ## Purpose: nicely print a "summary" of robustness weights
     stopifnot(is.numeric(w))
     cat(header,"\n")
     cat0 <- function(...) cat('', ...)
