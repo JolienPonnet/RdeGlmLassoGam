@@ -1,3 +1,33 @@
+##' This function estimates the RDE coefficients.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param muEstim a character string indicating the estimating method for the mean. This can be "glm" in case of a generalised linear model, "pen" in case of a penalised generalised linear model or "gam" in case of a generalised additive model.
+##' @param thetaEstim a character string indicating the estimating method for the dispersion. This can be "glm" in case of a generalised linear model, "pen" in case of a penalised generalised linear model or "gam" in case of a generalised additive model.
+##' @param p1 order of the basis for the mean model in case muEstim equals "gam". It depends on the option of smooth.basis1. Default value is 3.
+##' @param p2 order of the basis for the dispersion model in case thetaEstim equals "gam". It depends on the option of smooth.basis2. Default value is 3.
+##' @param K1 number of knots of the basis for the mean model in case muEstim equals "gam"; dependent on the option of smooth.basis1. Default value is 30.
+##' @param K2 number of knots of the basis for the dispersion model in case thetaEstim equals "gam"; dependent on the option of smooth.basis2. Default value is 30.
+##' @param sp1 a vector of smoothing parameters for the mean model in case muEstim equals "gam". If only one value is specified, it will be used for all smoothing parameters in this model.
+##' @param sp2 a vector of smoothing parameters for the dispersion model in case thetaEstim equals "gam". If only one value is specified, it will be used for all smoothing parameters in this model.
+##' @param smooth.basis1 the specification of basis for the mean model in case muEstim equals "gam". Four choices are available: "tp" = thin plate regression spline, "cr" = cubic regression spline, "ps" = P-splines, "tr" = truncated power spline. Default value is "cr".
+##' @param smooth.basis2 the specification of basis for the dispersion model in case thetaEstim equals "gam". Four choices are available: "tp" = thin plate regression spline, "cr" = cubic regression spline, "ps" = P-splines, "tr" = truncated power spline. Default value is "cr".
+##' @param intercept Logical indicating whether an intercept should be present. Default value is TRUE.
+##' @param standardize Logical indicating whether design matrices X and Z are robustly standardized. If FALSE, the continuous predictors are robustly standardized in the algorithm (minus median, divided by median absolute deviation). This is strongly advised when using a penalized regression. Default value is TRUE.
+##' @param beta.ini optional initial value for the beta coefficients.
+##' @param gamma.ini optional initial value for the gamma coefficients.
+##' @param lambdaBeta (Non-negative) regularization parameter for lasso on mean GLM. Default value is 0, which means no regularization.
+##' @param lambdaGamma (Non-negative) regularization parameter for lasso on dispersion GLM. Default value is 0, which means no regularization.
+##' @param weights.on.xz1 only of importance when there are more observations than variabels. It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. The tuning parameter alpha can be provided in the optionList.
+##' @param weights.on.xz2 only of importance when there are more observations than variabels. It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. The tuning parameter alpha can be provided in the optionList. Default value is NULL, meaning that the same weights as for the dispersion model are used.
+##' @param rowLev logical, only important when there are more variables than observations, which is TRUE (default) when observations get a low weight once the whole observation is detected as a leverage.
+##' @param contX indices of the columns in X representing the the continuous variables.  When weights.on.xz1 or weights.on.xz2 is equal to "covMcd", this parameter or contZ should be specified. Default value is NULL.
+##' @param contZ indices of the columns in Z representing the the continuous variables. When weights.on.xz1 or weights.on.xz2 is equal to "covMcd", this parameter or contX should be specified. Default value is NULL.
+##' @param weightFunction1 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param weightFunction2 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". Default value is NULL, meaning that the same function as for the mean model is used.
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. Default value is list(huberC = 2, tukeyC = 3, tol = 1e-4, maxIt = 100, alpha = 0.75).
 RDE <- function(y, X, Z, mBin = NULL, family,
                 muEstim = 'glm', thetaEstim = 'glm',
                 p1=3, p2=NULL, K1=30, K2=NULL, sp1=-1, sp2=NULL,
@@ -830,6 +860,20 @@ RDE <- function(y, X, Z, mBin = NULL, family,
 }
 
 # This function calculates asymptotic information: M matrix, Q matrix and asymptotic variance matrix.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param c1 tuning constant used in the mean model
+##' @param weightF1 the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param c2 tuning constant used in the dispersion model
+##' @param weightF2 the weight function is used to diminish the effect of large residuals in the model for the dispersion. 
+##' @param weights.xz1 It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. 
+##' @param weights.xz2 It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
 CalculateAsymptoticInfo <- function(y, X, Z, m, mu, theta,
                                     family,
                                     c1, weightF1,
@@ -995,7 +1039,18 @@ CalculateAsymptoticInfo <- function(y, X, Z, m, mu, theta,
               ASVar = ASVar))
 }
 
-# This function is used to update the beta parameter in GLM setting.
+##' This function is used to update the beta parameter in GLM setting.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the mean model
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
 CalculateBetaUpdate <- function(y, X, Z,
                                 family,
                                 m,
@@ -1102,7 +1157,20 @@ CalculateBetaUpdate <- function(y, X, Z,
   return(solve(PsiDeriv,diag(p)) %*% LLBeta)
 }
 
-# This function is used to update the beta parameter in GLM setting with lasso penalty.
+##' This function is used to update the beta parameter in GLM setting with lasso penalty.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param lambdaBeta (Non-negative) regularization parameter for lasso on mean GLM. 
+##' @param c tuning constant used in the mean model
+##' @param v_fun the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
+##' @param intercept Logical indicating whether an intercept should be present. 
 CalculateBetaUpdateLasso <- function(y, X, Z, family, mBin, mu, theta, lambdaBeta,
                                      c, v_fun,  weights.xz,
                                      optionList, intercept){
@@ -1192,6 +1260,16 @@ CalculateBetaUpdateLasso <- function(y, X, Z, family, mBin, mu, theta, lambdaBet
 }
 
 # This function is used to update the beta parameter in GAM setting.
+##' @param y the response vector.
+##' @param B the model matrix for the mean.
+##' @param rS penalty matrix for the mean model.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the mean model
+##' @param v_fun the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. 
 CalculateBetaUpdateGAM <- function(y, B, rS,
                                    family,
                                    mBin,
@@ -1260,6 +1338,17 @@ CalculateBetaUpdateGAM <- function(y, B, rS,
 }
 
 # This function is used to update the gamma parameter in GLM setting.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the dispersion model
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the dispersion 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
 CalculateGammaUpdate <- function(y, X, Z,
                                  family,
                                  m,
@@ -1368,7 +1457,20 @@ CalculateGammaUpdate <- function(y, X, Z,
   return(solve(PsiDeriv, diag(q)) %*% LLGamma)
 }
 
-# This function is used to update the gamma parameterin GLM setting with lasso penalty.
+# This function is used to update the gamma parameter in GLM setting with lasso penalty.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param lambdaGammaa (Non-negative) regularization parameter for lasso on dispersion GLM. 
+##' @param c tuning constant used in the mean model
+##' @param v_fun the weight function is used to diminish the effect of large residuals in the model for the dispersion 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion 
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. 
+##' @param intercept Logical indicating whether an intercept should be present. 
 CalculateGammaUpdateLasso <- function(y, X, Z, family,
                                       mBin,
                                       mu, theta, lambdaGamma,
@@ -1481,6 +1583,16 @@ CalculateGammaUpdateLasso <- function(y, X, Z, family,
 }
 
 # This function is used to update the gamma parameter in GAM setting.
+##' @param y the response vector.
+##' @param B the model matrix for the dispersion.
+##' @param rS penalty matrix for the dispersion model.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. 
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the mean model
+##' @param v_fun the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weights.xz It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. 
 CalculateGammaUpdateGAM <- function(y, B, rS,
                                     family,
                                     mBin,
@@ -1567,13 +1679,18 @@ CalculateGammaUpdateGAM <- function(y, B, rS,
   return(solve(t(X1)%*%weightsAM%*%X1) %*% t(X1)%*%weightsAM%*%resp)
 }
 
-
+##' Huber weight function
+##' @param x where to evaluate the function
+##' @param c the tuning constant
 HuberResid <- function(x, c){
   x[x <= -c] <- -c
   x[x >= c] <- c
   return(x)
 }
 
+##' Tukey weight function
+##' @param x where to evaluate the function
+##' @param c the tuning constant
 TukeyResid <- function(x, c){
   response <- ((x/c)^2-1)^2*x
   Ind <- which(abs(x)>c)
@@ -1581,7 +1698,12 @@ TukeyResid <- function(x, c){
   return( response )
 }
 
-
+##' nu_2 function (see paper) for the Poisson distribution
+##' @param v_fun v_2 function (see paper)
+##' @param y the response vector.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the dispersion model
 nu_fun_pois2 <- function(v_fun, y, mu, theta, c, mBin){
   if((length(theta)>1)){
     resid = (y-mu)/sqrt(mu/theta)
@@ -1608,6 +1730,13 @@ nu_fun_pois2 <- function(v_fun, y, mu, theta, c, mBin){
   }
 }
 
+##' nu_2 function (see paper) for the binomial distribution
+##' @param v_fun v_2 function (see paper)
+##' @param y the response vector.
+##' @param mu a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param c tuning constant used in the dispersion model
+##' @param mBin a vector with the number of trials. 
 nu_fun_bin2 <- function(v_fun, y, mu, theta, c, mBin){
   if((length(theta)>1)){
     resid = (y - mu) / sqrt(mu * (1 - mu) / (mBin * theta))
@@ -1651,6 +1780,11 @@ nu_fun_bin2 <- function(v_fun, y, mu, theta, c, mBin){
   }
 }
 
+##' Function to obtain vector of variance values based on the mean, the dispersion, the variance function and number of trials.
+##' @param m a vector with estimated mean values
+##' @param theta a vector with estimated dispersion values
+##' @param varfun the variance function
+##' @param mBin a vector with the number of trials.
 var <- function(m, theta, varfun, mBin){
   vari = varfun(m)/mBin
   return(vari/theta)
