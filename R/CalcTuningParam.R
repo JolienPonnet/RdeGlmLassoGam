@@ -1,3 +1,15 @@
+##' This function determines the smallest tuning parameter for the RDE estimator such that the desired AMSE is obtained.
+##' @param cValues the vector with values for the tuning parameter that should be checked.
+##' @param AMSECrit the critical AMSE value.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weights.on.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd..
+##' @param weights.on.xz2 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. Default value is NULL, meaning that the same weights as for the dispersion model are used.
+##' @param weightFunction1 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param weightFunction2 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". Default value is NULL, meaning that the same function as for the mean model is used.
 CalcTuningParam <- function(cValues, AMSECrit,
                                y, X, Z, m, family,
                                weights.on.xz1 = "none", weights.on.xz2=NULL,
