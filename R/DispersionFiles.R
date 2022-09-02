@@ -1,3 +1,21 @@
+##' This function performs the hypothesis test that nzeroBeta specific beta coefficients and nzeroGamma specific gamma coefficients of the RDE estimator are zero.
+##' @param y the response vector.
+##' @param X the model matrix for the mean. The order of the variables should be the same as in alphaHNull.
+##' @param Z the model matrix for the dispersion. The order of the variables should be the same as in alphaHNull.
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param alphaHAlt the estimated coefficients under the alternative hypothesis. The order of the coefficients should  be the same as specified in alphaHNull.
+##' @param alphaHNull the estimated coefficients under the null hypothesis. In this vector, the beta coefficients are followed by the gamma coefficients.  Note that for both parts, we first have the non-zero coefficients followed by the zero coeffcients; e.g. \eqn (\beta_1, \beta_2, ..., 0,..., 0, \gamma_1, \gamma_2, ..., 0, 0).
+##' @param nzeroBeta number of beta coefficients that are zero under the null hypothesis.
+##' @param nzeroGamma number of gamma coefficients that are zero under the null hypothesis.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weightFunction1 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param weightFunction2 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". Default value is NULL, meaning that the same function as for the mean model is used.
+##' @param weights.on.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean.
+##' @param weights.on.xz2 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion.
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey".
+##' @param M M-matrix from the alternative hypothesis.
+##' @param Q Q-matrix from the alternative hypothesis.
+
 DispersionTest <- function(y, X, Z,
                            m = NULL,
                            alphaHAlt,
@@ -159,7 +177,15 @@ DispersionTest <- function(y, X, Z,
 }
 
 
-# Contribution to the integral of the main term.
+##' First contribution to the integral of the main term to perform the hypothesis test.
+##' @param mu the mean vector.
+##' @param y the response vector.
+##' @param theta the dispersion vector.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weights.on.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean.
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weightFunction a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
 integrand_mu_1 <- function(mu, y, theta, family, weights.on.xz1, weightF, weightFunction, m = NULL){
   Response <- rep(0.0, length(mu))
   if (family == "poisson"){
@@ -191,6 +217,15 @@ integrand_mu_1 <- function(mu, y, theta, family, weights.on.xz1, weightF, weight
 }
 
 # Contribution to the integral of the expectancy term.
+##' @param mu the mean vector.
+##' @param y the response vector.
+##' @param theta the dispersion vector.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weights.on.xz1 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean.
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the mean. 
+##' @param weightFunction a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param cutOff the tuning parameter
 integrand_mu_2 <- function(mu, y, theta, family, weights.on.xz1, weightF, weightFunction, m = NULL, cutOff){
   Response <- rep(0.0, length(mu))
   if (family == "poisson") {
@@ -238,6 +273,14 @@ integrand_mu_2 <- function(mu, y, theta, family, weights.on.xz1, weightF, weight
 }
 
 # Contribution to the integral of the main term.
+##' @param theta the dispersion vector.
+##' @param y the response vector.
+##' @param mu the mean vector.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weights.on.xz2 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion.
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the dispersion. 
+##' @param weightFunction a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". 
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
 integrand1 <- function(theta, y, mu, family, weights.on.xz2, weightF, weightFunction, m = NULL){
   Response <- rep(0.0, length(theta))
   if (family == "poisson"){
@@ -277,6 +320,15 @@ integrand1 <- function(theta, y, mu, family, weights.on.xz2, weightF, weightFunc
 }
 
 # Contribution to the integral of the expectancy term.
+##' @param theta the dispersion vector.
+##' @param y the response vector.
+##' @param mu the mean vector.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param weights.on.xz2 a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion.
+##' @param weightF the weight function is used to diminish the effect of large residuals in the model for the dispersion. 
+##' @param weightFunction a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". 
+##' @param m in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param cutOff the tuning parameter
 integrand2 <- function(theta, y, mu, family, weights.on.xz2, weightF, weightFunction, m = NULL, cutOff){
   Response <- rep(0.0, length(theta))
   if (family == "poisson") {
