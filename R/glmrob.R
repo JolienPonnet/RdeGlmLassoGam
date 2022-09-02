@@ -1,4 +1,65 @@
-#function of library(robustbase)
+# glmrob is a function of the package robustbase, that is copied due to a small 
+# change in their function glmrobMqle such that it also accepts a vector value 
+# for the parameter weights.on.x
+
+# Description (from package robustbase)
+# glmrob is used to fit generalized linear models by robust methods. The models 
+# are specified by giving a symbolic description of the linear predictor and a 
+# description of the error distribution. Currently, robust methods are 
+# implemented for family = binomial, = poisson, = Gamma and = gaussian.
+#
+
+# Arguments (from package robustbase)
+##' @param formula: a formula, i.e., a symbolic description of the model to be fit 
+##' @param family: a description of the error distribution and link function to be used 
+#         in the model. This can be a character string naming a family function, 
+#         a family function or the result of a call to a family function. 
+##' @param data: an optional data frame containing the variables in the model. If not 
+#       found in data, the variables are taken from environment(formula), 
+#       typically the environment from which glmrob is called.
+##' @param weights: an optional vector of weights to be used in the fitting process.
+##' @param subset: an optional vector specifying a subset of observations to be used in 
+#         the fitting process.
+##' @param na.action: a function which indicates what should happen when the data contain 
+#            NAs. The default is set by the na.action setting in options. The 
+#            "factory-fresh" default is na.omit.
+##' @param start:    starting values for the parameters in the linear predictor. Note 
+#           that specifying start has somewhat different meaning for the 
+#           different methods. Notably, for "MT", this skips the expensive 
+#           computation of initial estimates via sub samples, but needs to be 
+#           robust itself.
+##' @param offset: this can be used to specify an a priori known component to be included
+#         in the linear predictor during fitting.
+##' @param method: a character string specifying the robust fitting method. The details 
+#         of method specification are given below.
+##' @param weights.on.x: a character string (can be abbreviated), a function or list 
+#               (see below), or a numeric vector of length n, specifying how 
+#               points (potential outliers) in x-space are downweighted. If 
+#               "hat", weights on the design of the form sqrt{1-h_{ii}} are used, 
+#               where h_{ii} are the diagonal elements of the hat matrix. 
+#               If "robCov", weights based on the robust Mahalanobis distance of 
+#               the design matrix (intercept excluded) are used where the 
+#               covariance matrix and the centre is estimated by cov.rob from 
+#               the package MASS. Similarly, if "covMcd", robust weights are 
+#               computed using covMcd. The default is "none".
+#               If weights.on.x is a function, it is called with arguments 
+#               (X, intercept) and must return an n-vector of non-negative 
+#               weights.
+#               If it is a list, it must be of length one, and as element 
+#               contain a function much like covMcd() or cov.rob() 
+#               (package MASS), which computes multivariate location and 
+#               "scatter" of a data matrix X.
+##' @param control: a list of parameters for controlling the fitting process. 
+#          See the documentation for glmrobMqle.control for details.
+##' @param model: a logical value indicating whether model frame should be included as a 
+#        component of the returned value.
+##' @param x, y: logical values indicating whether the response vector and model matrix 
+#       used in the fitting process should be returned as components of the 
+#       returned value.
+##' @param contrasts: an optional list. See the contrasts.arg of model.matrix.default.
+##' @param trace.lev: logical (or integer) indicating if intermediate results should be 
+#            printed; defaults to 0 (the same as FALSE).
+##' @param ... arguments passed to glmrobMqle.control when control is NULL (as per default).
 glmrob <-
 function (formula, family, data, weights, subset,
 	  na.action, start = NULL, offset,
@@ -125,7 +186,15 @@ function (formula, family, data, weights, subset,
     fit
 }
 
-
+##' The summary method for class "glmrob" summarizes robust fits of (currently only discrete) generalized linear models.
+##' @param object an object of class "glmrob", usually, a result of a call to glmrob.
+##' @param  correlation	logical; if TRUE, the correlation matrix of the estimated parameters is returned and printed.
+##' @param symbolic.cor	logical. If TRUE, print the correlations in a symbolic form (see symnum) rather than as numbers.
+##' @param ...	 further arguments passed to or from other methods.
+##' @param x	 an object of class "summary.glrob".
+##' @param digits	 the number of digits to use for printing.
+##' @param signif.stars logical indicating if the P-values should be visualized by so called "significance stars".
+##' Function from the package robustbase.
 summary.glmrob <- function(object, correlation=FALSE, symbolic.cor=FALSE, ...)
 {
     dispersion <- object$dispersion
@@ -157,7 +226,11 @@ summary.glmrob <- function(object, correlation=FALSE, symbolic.cor=FALSE, ...)
     structure(ans, class = "summary.glmrob")
 }
 
-## almost a copy of vcov.glm() [if that didn't have summmary.glm() explicitly]
+##' Almost a copy of vcov.glm() [if that didn't have summmary.glm() explicitly]
+##' Returns the variance-covariance matrix of the main parameters of a fitted model object. The "main" parameters of model correspond to those returned by coef, and typically do not contain a nuisance scale parameter (sigma).
+##' Function from the package robustbase
+##' @param object an object of class "glmrob", usually, a result of a call to glmrob.
+
 vcov.glmrob <- function (object, ...)
 {
     so <- summary(object, corr = FALSE, ...)
@@ -166,7 +239,10 @@ vcov.glmrob <- function (object, ...)
     so$cov.scaled
 }
 
-
+##' Print a glmrob object
+##' Function from the package robustbase
+##' @param x an object of class "glmrob"
+##' @param digits number of significant digits to print
 print.glmrob <- function (x, digits = max(3, getOption("digits") - 3), ...)
 {
     cat("\nCall: ", deparse(x$call), "\n\n")
@@ -185,6 +261,12 @@ print.glmrob <- function (x, digits = max(3, getOption("digits") - 3), ...)
     invisible(x)
 }
 
+##' Print a summary of a glmrob object
+##' Function from the package robustbase
+##' @param x an object of class "glmrob"
+##' @param digits number of significant digits to print
+##' @param symbolic.cor logical. If TRUE, print the correlations in a symbolic form (see symnum) rather than as numbers.
+##' @param signif.stars logical indicating if the P-values should be visualized by so called "significance stars".
 print.summary.glmrob <-
     function (x, digits = max(3, getOption("digits") - 3),
 	      symbolic.cor = x$symbolic.cor,
@@ -241,6 +323,11 @@ print.summary.glmrob <-
     invisible(x)
 }
 
+##' Function from the package robustbase.
+##' weights() extracts robustness weights or fitting (or prior) weights from a glmrob object.
+##' @param object	an object of class "glmrob", typically the result of a call to glmrob.
+##' @param type	the type of weights to be returned. Either "prior" (default), or "robustness".
+##' @param ...	not used currently.
 weights.glmrob <- function(object, type = c("prior", "robustness"), ...) {
     type <- match.arg(type)
     w <- if (type == "prior") {
@@ -255,6 +342,11 @@ weights.glmrob <- function(object, type = c("prior", "robustness"), ...) {
 
 ## Stems from a copy of residuals.glm() in
 ## ~/R/D/r-devel/R/src/library/stats/R/glm.R
+##' Compute residuals of a fitted glmrob model, i.e., robust generalized linear model fit.
+##' @param object n object of class glmrob, typically the result of a call to glmrob.
+##' @param type the type of residuals which should be returned. The alternatives are: "deviance" (default), "pearson", "working", "response", and "partial".
+##' @param ...	further arguments passed to or from other methods.
+##' Function from the package robustbase.
 residuals.glmrob <-
     function(object,
 	     type = c("deviance", "pearson", "working", "response",
