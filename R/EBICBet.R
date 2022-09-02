@@ -1,4 +1,33 @@
-#calculate EBIC for beta
+##' This function estimates the EBIC value for the mean parameters. This can be used for the tuning of the penalty parameter in the sparse mean model of the RDE estimator.
+##' @param y the response vector.
+##' @param X the model matrix for the mean.
+##' @param Z the model matrix for the dispersion.
+##' @param mBin in case family equals "binomial", this parameter should represent a vector with the number of trials. Default value is NULL.
+##' @param family a character string indicating the family. This can be "poisson" or "binomial".
+##' @param muEstim a character string indicating the estimating method for the mean. This can be "glm" in case of a generalised linear model, "pen" in case of a penalised generalised linear model or "gam" in case of a generalised additive model.
+##' @param thetaEstim a character string indicating the estimating method for the dispersion. This can be "glm" in case of a generalised linear model, "pen" in case of a penalised generalised linear model or "gam" in case of a generalised additive model.
+##' @param p1 order of the basis for the mean model in case muEstim equals "gam". It depends on the option of smooth.basis1. Default value is 3.
+##' @param p2 order of the basis for the dispersion model in case thetaEstim equals "gam". It depends on the option of smooth.basis2. Default value is 3.
+##' @param K1 number of knots of the basis for the mean model in case muEstim equals "gam"; dependent on the option of smooth.basis1. Default value is 30.
+##' @param K2 number of knots of the basis for the dispersion model in case thetaEstim equals "gam"; dependent on the option of smooth.basis2. Default value is 30.
+##' @param sp1 a vector of smoothing parameters for the mean model in case muEstim equals "gam". If only one value is specified, it will be used for all smoothing parameters in this model.
+##' @param sp2 a vector of smoothing parameters for the dispersion model in case thetaEstim equals "gam". If only one value is specified, it will be used for all smoothing parameters in this model.
+##' @param smooth.basis1 the specification of basis for the mean model in case muEstim equals "gam". Four choices are available: "tp" = thin plate regression spline, "cr" = cubic regression spline, "ps" = P-splines, "tr" = truncated power spline. Default value is "cr".
+##' @param smooth.basis2 the specification of basis for the dispersion model in case thetaEstim equals "gam". Four choices are available: "tp" = thin plate regression spline, "cr" = cubic regression spline, "ps" = P-splines, "tr" = truncated power spline. Default value is "cr".
+##' @param intercept Logical indicating wether an intercept should be present. Default value is TRUE.
+##' @param standardize Logical indicating whether design matrices X and Z are robustly standardized. If FALSE, the continuous predictors are robustly standardized in the algorithm (minus median, divided by median absolute deviation). This is strongly advised when using a penalized regression. Default value is TRUE.
+##' @param beta.ini optional initial value for the beta coefficients.
+##' @param gamma.ini optional initial value for the gamma coefficients.
+##' @param lambdaBeta (Non-negative) regularization parameter for lasso on mean GLM. Default value is 0, which means no regularization.
+##' @param lambdaGamma (Non-negative) regularization parameter for lasso on dispersion GLM. Default value is 0, which means no regularization.
+##' @param weights.on.xz1 only of importance when there are more observations than variabels. It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the mean. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. The tuning parameter alpha can be provided in the optionList.
+##' @param weights.on.xz2 only of importance when there are more observations than variabels. It is a numeric vector, specifying how points (potential outliers) in xz-space are downweighted while modelling the dispersion. It is also possible to provide a character string. In case this is "none", all observations get weight 1. In case this is "covMcd", the weights are determined via the function robustbase::covMcd. The tuning parameter alpha can be provided in the optionList. Default value is NULL, meaning that the same weights as for the dispersion model are used.
+##' @param rowLev logical, only important when there are more variables than observations, which is TRUE (default) when observations get a low weight once the whole observation is detected as a leverage.
+##' @param contX indices of the columns in X representing the the continuous variables.  When weights.on.xz1 or weights.on.xz2 is equal to "covMcd", this parameter or contZ should be specified. Default value is NULL.
+##' @param contZ indices of the columns in Z representing the the continuous variables. When weights.on.xz1 or weights.on.xz2 is equal to "covMcd", this parameter or contX should be specified. Default value is NULL.
+##' @param weightFunction1 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the mean. This can be "Huber" or "Tukey". Default value is "Huber".
+##' @param weightFunction2 a character string indicating which weight function is used to diminish the effect of large residuals in the model for the dispersion. This can be "Huber" or "Tukey". Default value is NULL, meaning that the same function as for the mean model is used.
+##' @param optionList list that should contain the tuning parameter huberC in case weightFunction equals "Huber", or the tuning parameter tukeyC in case weightFunction equals "Tukey". Furthermore, the tuning parameter alpha for the function robustbase::covMcd can be provided, with default value 0.75 . Finally, maxIt which is the maximum number of iterations and tol, which is the tolerance can be provided here. Default value is list(huberC = 2, tukeyC = 3, tol = 1e-4, maxIt = 100, alpha = 0.75).
 EBICBet = function(y, X, Z, mBin = NULL, family,
                    muEstim = 'glm', thetaEstim = 'glm',
                    p1=3, p2=NULL, K1=30, K2=NULL, sp1=-1, sp2=NULL,
