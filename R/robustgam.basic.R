@@ -109,7 +109,8 @@ expect.poisson <- function(m, c, sqrtVar,...){
 ## Binomial (Bernoulli) case
 ##' @param m mean
 ##' @param c tuning constant
-##' @param sqrtVar standard deviationexpect.binomial <- function(m, c, sqrtVar,...){
+##' @param sqrtVar standard deviation
+expect.binomial <- function(m, c, sqrtVar,...){
   return( (Huber.deriv((1-m)/sqrtVar, c)*m+Huber.deriv(-m/sqrtVar,c)*(1-m)) )
 }
 
